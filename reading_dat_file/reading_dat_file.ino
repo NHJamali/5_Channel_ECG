@@ -21,7 +21,7 @@ int16_t read16bitSigned(File &file) {
 
 void setup() {
   // Initialize Serial for plotting
-  Serial.begin(500000);
+  Serial.begin(9600);
   while (!Serial) {
     ; // Wait for serial port to connect. Needed for native USB port only
   }
@@ -37,6 +37,16 @@ void setup() {
 
 void loop() {
   // Open the .dat file
+
+  // Initialize SD card
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Initialization failed!");
+    return;
+  }
+  Serial.println("Initialization done.");
+
+  
   File dataFile = SD.open("01000_lr.dat");
   if (!dataFile) {
     Serial.println("Error opening 01000_lr.dat");
