@@ -4,9 +4,13 @@
 const int chipSelect = 4; // Change to your SD card CS pin
 const int dacPin0 = DAC0; // DAC output pin
 const int signalSamplingRate = 1000; // Sampling rate in Hz
-const int signalDelay = 10000000 / signalSamplingRate; // Microseconds delay
+const int signalDelay = 10000; // signalSamplingRate; // Microseconds delay
 const int numberOfSignals = 12; // Total number of signals as per .hea file
 const int signalIndexLeadII = 1; // Assume Lead II is the 2nd signal (index 1 in 0-based indexing)
+const int maxSamples = 10000; // Adjust this based on your memory constraints
+
+int16_t leadIISignal[maxSamples];
+int totalSamples = 0;
 
 // Function to read a 16-bit signed integer from the binary file
 int16_t read16bitSigned(File &file) {
@@ -29,9 +33,7 @@ void setup() {
     return;
   }
   Serial.println("Initialization done.");
-}
 
-void loop() {
   // Open the .dat file
   File dataFile = SD.open("01000_lr.dat");
   if (!dataFile) {
@@ -39,23 +41,30 @@ void loop() {
     return;
   }
 
-  // Read and output data continuously
-  while (dataFile.available()) {
-    // Skip to the desired signal
+  // Read the Lead II signal data from the file and store in an array
+  while (dataFile.available() && totalSamples < maxSamples) {
     for (int i = 0; i < numberOfSignals; i++) {
       int16_t data = read16bitSigned(dataFile);
 
-      // Process Lead II signal
+      // Store Lead II signal
       if (i == signalIndexLeadII) {
-        int scaledDataLeadII = map(data, -32768, 32767, 0, 4095);
-        analogWrite(dacPin0, scaledDataLeadII);
-
-        // Delay to match the sampling rate
-        delayMicroseconds(signalDelay);
+        leadIISignal[totalSamples] = data;
+        totalSamples++;
+        if (totalSamples >= maxSamples) break;
       }
     }
   }
 
-  // Close the file and reopen it to loop continuously
   dataFile.close();
+  Serial.print("Total samples stored: ");
+  Serial.println(totalSamples);
+}
+
+void loop() {
+  // Produce the signal continuously from the stored data
+  for (int i = 0; i < totalSamples; i++) {
+    int scaledDataLeadII = map(leadIISignal[i], -32768, 32767, 0, 4095);
+    analogWrite(dacPin0, scaledDataLeadII);
+    delayMicroseconds(signalDelay);
+  }
 }
