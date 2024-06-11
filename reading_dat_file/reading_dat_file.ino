@@ -4,9 +4,11 @@
 const int chipSelect = 4; // Change to your SD card CS pin
 const int dacPin0 = DAC0; // DAC output pin
 const int signalSamplingRate = 1000; // Sampling rate in Hz
-const int signalDelay = 10000000 / signalSamplingRate; // Microseconds delay
+const int signalDelay = 10 / signalSamplingRate; // Microseconds delay
 const int numberOfSignals = 12; // Total number of signals as per .hea file
-const int signalIndexLeadII = 1; // Assume Lead II is the 2nd signal (index 1 in 0-based indexing)
+const int signalIndexLeadII = 0; // Assume Lead II is the 2nd signal (index 1 in 0-based indexing)
+
+File dataFile;
 
 // Function to read a 16-bit signed integer from the binary file
 int16_t read16bitSigned(File &file) {
@@ -29,6 +31,12 @@ void setup() {
     return;
   }
   Serial.println("Initialization done.");
+  // Open the .dat file
+  File dataFile = SD.open("01000_lr.dat");
+  if (!dataFile) {
+    Serial.println("Error opening 01000_lr.dat");
+    return;
+  }
 }
 
 void loop() {
