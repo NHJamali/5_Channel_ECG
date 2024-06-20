@@ -66,17 +66,18 @@ void outputECGSignal() {
   unsigned long currentMicros = 0;
 
   while (true) { // Continuous loop
-    for (int i = 0; i < numSamples; i++) {
+    for (int i = 341; i < 431; i++) {
       // Get the current time in microseconds
-      currentMicros = micros();
+      //currentMicros = micros();
 
       // Wait until the correct sampling interval has passed
-      if (currentMicros - previousMicros >= interval) {
-        previousMicros = currentMicros;
+      //if (currentMicros - previousMicros >= interval) // interval
+      //{
+      //  previousMicros = currentMicros;
 
         // Convert the raw value to millivolts
         int16_t rawValue = ecgData[i];
-        float millivolts = (rawValue - initialZero) * (gain / 1000.0) + baseline;
+        float millivolts = (rawValue - initialZero) * (gain / 100.0) + baseline;
 
         // Convert millivolts to a value suitable for the DAC
         int dacValue = map(millivolts, 0, 3300, 0, 4095); // Assuming -3.3V to 3.3V range for DAC
@@ -84,11 +85,11 @@ void outputECGSignal() {
         // Output the value to DAC0
         analogWrite(DAC0, dacValue);
         
-      }
-      //delayMicroseconds(45);
+      //}
+      delay(10);
     }
-    analogWrite(DAC0, baseline);
-    delay(50);
+    //analogWrite(DAC0, baseline);
+    //delayMicroseconds(100000);
   }
 }
 
