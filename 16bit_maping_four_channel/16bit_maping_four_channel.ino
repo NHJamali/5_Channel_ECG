@@ -125,12 +125,18 @@ void setup() {
 void loop() {
   for (int i = 255; i < 341; i++) {
     // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
-    uint16_t valueA = (uint16_t)((adjustedData[0][i] + 5.0) / 10.0 * 4095);
-    uint16_t valueB = (uint16_t)((adjustedData[1][i] + 5.0) / 10.0 * 4095);
-    uint16_t valueC = (uint16_t)((adjustedData[6][i] + 5.0) / 10.0 * 4095);
-    uint16_t valueD = (uint16_t)((adjustedData[7][i] + 5.0) / 10.0 * 4095);
-    uint16_t dacValue = (uint16_t)((adjustedData[2][i] + 5.0) / 10.0 * 4095);
+    // uint16_t valueA = (uint16_t)((adjustedData[0][i] + 5.0) / 10.0 * 4095);
+    // uint16_t valueB = (uint16_t)((adjustedData[1][i] + 5.0) / 10.0 * 4095);
+    // uint16_t valueC = (uint16_t)((adjustedData[6][i] + 5.0) / 10.0 * 4095);
+    // uint16_t valueD = (uint16_t)((adjustedData[7][i] + 5.0) / 10.0 * 4095);
+    // uint16_t dacValue = (uint16_t)((adjustedData[2][i] + 5.0) / 10.0 * 4095);
 
+    // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
+    uint16_t valueA = (uint16_t)(map(adjustedData[0][i],-20,120,0,4095));
+    uint16_t valueB = (uint16_t)(map(adjustedData[1][i],5,45,0,4095));
+    uint16_t valueC = (uint16_t)(map(adjustedData[6][i],-70,10,0,4095));
+    uint16_t valueD = (uint16_t)(map(adjustedData[7][i],-60,30,0,4095));
+    uint16_t dacValue = (uint16_t)(map(adjustedData[2][i],-300,20,0,4095));
 
     //float millivolts = (rawValue - initialZero) * (gain / 100.0) + baseline;
     //int dacValue = map(millivolts, -3300, 3300, 0, 4095);
