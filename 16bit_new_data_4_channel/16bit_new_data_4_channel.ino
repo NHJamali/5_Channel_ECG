@@ -34,7 +34,7 @@ bool readHeaFile(const char *filename) {
   heaFile.readStringUntil('\n');
 
   // Read gain and baseline values for each lead
-  for (int i = 0; i < numLeads; i++) {
+ for (int i = 0; i < numLeads; i++) {
     String line = heaFile.readStringUntil('\n');
     char buffer[100];
     line.toCharArray(buffer, 100);
@@ -43,13 +43,20 @@ bool readHeaFile(const char *filename) {
     char *token = strtok(buffer, " ");
     token = strtok(NULL, " "); // Skip the filename
     token = strtok(NULL, " "); // Skip the format (e.g., 16)
-    token = strtok(NULL, "("); // Start of gain
-    gain[i] = atof(token);
+    
+    // Extract gain with possible correction factor
+    char *gainToken = strtok(NULL, "(");
+    gain[i] = atof(gainToken);
+    token = strtok(NULL, ")");
+    if (token != NULL) {
+      gain[i] = gain[i] / atof(token);
+    }
+
     token = strtok(NULL, " "); // Skip /mV
     token = strtok(NULL, " "); // Skip format again (e.g., 16)
     token = strtok(NULL, " "); // Skip 0
     baseline[i] = atoi(token);
-  }
+}
 
   heaFile.close();
   return true;
@@ -80,13 +87,13 @@ bool readDatFile(const char *filename) {
 }
 
 // Function to adjust the raw data using gain and baseline
-void adjustData() {
-  for (int i = 0; i < numLeads; i++) {
-    for (int j = 0; j < numSamples; j++) {
-      adjustedData[i][j] = (rawData[i][j] - baseline[i]) /gain[i];
-    }
-  }
-}
+// void adjustData() {
+//   for (int i = 0; i < numLeads; i++) {
+//     for (int j = 0; j < numSamples; j++) {
+//       adjustedData[i][j] = (rawData[i][j] - baseline[i]) /gain[i];
+//     }
+//   }
+// }
 
 void setup() {
   Serial.begin(9600);
@@ -107,23 +114,23 @@ void setup() {
   }
 
   // Read and parse the .hea file
-  if (!readHeaFile("01000_lr.hea")) {
+  if (!readHeaFile("2.hea")) {
     Serial.println("Failed to read .hea file");
     while (1) { delay(10); }
   }
 
   // Read the .dat file
-  if (!readDatFile("01000_lr.dat")) {
+  if (!readDatFile("2.dat")) {
     Serial.println("Failed to read .dat file");
     while (1) { delay(10); }
   }
 
   // Adjust the raw data using gain and baseline
-  adjustData();
+  //adjustData();
 }
 
 void loop() {
-  for (int i = 255; i < 341; i++) {
+  for (int i = 400; i < 2052; i++) {
     // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
     // uint16_t valueA = (uint16_t)((adjustedData[0][i] + 5.0) / 10.0 * 4095);
     // uint16_t valueB = (uint16_t)((adjustedData[1][i] + 5.0) / 10.0 * 4095);
@@ -131,12 +138,12 @@ void loop() {
     // uint16_t valueD = (uint16_t)((adjustedData[7][i] + 5.0) / 10.0 * 4095);
     // uint16_t dacValue = (uint16_t)((adjustedData[2][i] + 5.0) / 10.0 * 4095);
 
-    // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
-    uint16_t valueA = (uint16_t)(map(adjustedData[0][i],-20,120,0,4095));
-    uint16_t valueB = (uint16_t)(map(adjustedData[1][i],5,45,0,4095));
-    uint16_t valueC = (uint16_t)(map(adjustedData[6][i],-70,10,0,4095));
-    uint16_t valueD = (uint16_t)(map(adjustedData[7][i],-60,30,0,4095));
-    uint16_t dacValue = (uint16_t)(map(adjustedData[2][i],-800,200,0,4095));
+    // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC) -120 -32198
+    uint16_t valueA = (uint16_t)(map(((rawData[0][i] - (-120))),-100,1616,0,4095));
+    uint16_t valueB = (uint16_t)(map(((rawData[1][i] - 25)),-200,1006,0,4095));
+    uint16_t valueC = (uint16_t)(map(((rawData[6][i] - 150)),-1072,300,0,4095));
+    uint16_t valueD = (uint16_t)(map(((rawData[7][i] - 62)),-572,1000,0,4095));
+    uint16_t dacValue = (uint16_t)(map(((rawData[2][i] - 145)),-1000,229,0,4095));
 
     //float millivolts = (rawValue - initialZero) * (gain / 100.0) + baseline;
     //int dacValue = map(millivolts, -3300, 3300, 0, 4095);
@@ -149,7 +156,7 @@ void loop() {
     analogWrite(DAC0, dacValue);
 
     // Delay to simulate real-time output
-    delayMicroseconds(9900); // Adjust this delay as needed for real-time playback
+    delayMicroseconds(2000); // Adjust this delay as needed for real-time playback
   }
   
 }
