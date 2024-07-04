@@ -9,10 +9,10 @@ Adafruit_MCP4728 mcp;
 const int chipSelect = 4;
 
 // Number of samples in the .dat file (as per the .hea file)
-const int numSamples = 1000;
+const int numSamples = 173;
 
 // Number of leads in the .dat file (as per the .hea file)
-const int numLeads = 12;
+const int numLeads = 5;
 
 // Buffers to store raw and adjusted signal data
 int16_t rawData[numLeads][numSamples];
@@ -107,13 +107,13 @@ void setup() {
   }
 
   // Read and parse the .hea file
-  if (!readHeaFile("01000_lr.hea")) {
+  if (!readHeaFile("interpolated_01000_lr.hea")) {
     Serial.println("Failed to read .hea file");
     while (1) { delay(10); }
   }
 
   // Read the .dat file
-  if (!readDatFile("01000_lr.dat")) {
+  if (!readDatFile("interpolated_01000_lr.dat")) {
     Serial.println("Failed to read .dat file");
     while (1) { delay(10); }
   }
@@ -123,7 +123,7 @@ void setup() {
 }
 
 void loop() {
-  for (int i = 255; i < 341; i++) {
+  for (int i = 1; i < 160; i++) {
     // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
     // uint16_t valueA = (uint16_t)((adjustedData[0][i] + 5.0) / 10.0 * 4095);
     // uint16_t valueB = (uint16_t)((adjustedData[1][i] + 5.0) / 10.0 * 4095);
@@ -134,9 +134,9 @@ void loop() {
     // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
     uint16_t valueA = (uint16_t)(map(rawData[0][i]-(-710),700,1845,0,4095));
     uint16_t valueB = (uint16_t)(map(rawData[1][i]-(-661),738,1191,0,4095));
-    uint16_t valueC = (uint16_t)(map(rawData[6][i]-260,-956,-196,0,4095));
+    uint16_t valueC = (uint16_t)(map(rawData[3][i]-260,-956,-196,0,4095));
     uint16_t dacValue = (uint16_t)(map(rawData[2][i]-49,-1024,52,0,4095));
-    uint16_t valueD = (uint16_t)(map(rawData[7][i]-(-229),-352,529,0,4095));
+    uint16_t valueD = (uint16_t)(map(rawData[4][i]-(-229),-352,529,0,4095));
 
     //float millivolts = (rawValue - initialZero) * (gain / 100.0) + baseline;
     //int dacValue = map(millivolts, -3300, 3300, 0, 4095);
