@@ -22,39 +22,6 @@ float adjustedData[numLeads][numSamples];
 float gain[numLeads];
 int baseline[numLeads];
 
-// Function to read and parse the .hea file
-bool readHeaFile(const char *filename) {
-  File heaFile = SD.open(filename);
-  if (!heaFile) {
-    Serial.println("Error opening .hea file");
-    return false;
-  }
-
-  // Skip the first line of the .hea file
-  heaFile.readStringUntil('\n');
-
-  // Read gain and baseline values for each lead
-  for (int i = 0; i < numLeads; i++) {
-    String line = heaFile.readStringUntil('\n');
-    char buffer[100];
-    line.toCharArray(buffer, 100);
-
-    // Tokenize the line to extract gain and baseline
-    char *token = strtok(buffer, " ");
-    token = strtok(NULL, " "); // Skip the filename
-    token = strtok(NULL, " "); // Skip the format (e.g., 16)
-    token = strtok(NULL, "("); // Start of gain
-    gain[i] = atof(token);
-    token = strtok(NULL, " "); // Skip /mV
-    token = strtok(NULL, " "); // Skip format again (e.g., 16)
-    token = strtok(NULL, " "); // Skip 0
-    baseline[i] = atoi(token);
-  }
-
-  heaFile.close();
-  return true;
-}
-
 // Function to read the .dat file
 bool readDatFile(const char *filename) {
   File datFile = SD.open(filename, FILE_READ);
@@ -79,15 +46,6 @@ bool readDatFile(const char *filename) {
   return true;
 }
 
-// Function to adjust the raw data using gain and baseline
-void adjustData() {
-  for (int i = 0; i < numLeads; i++) {
-    for (int j = 0; j < numSamples; j++) {
-      adjustedData[i][j] = (rawData[i][j] - baseline[i]) /gain[i];
-    }
-  }
-}
-
 void setup() {
   Serial.begin(9600);
 
@@ -106,14 +64,8 @@ void setup() {
     while (1) { delay(10); }
   }
 
-  // Read and parse the .hea file
-  if (!readHeaFile("interpolated_01000_lr.hea")) {
-    Serial.println("Failed to read .hea file");
-    while (1) { delay(10); }
-  }
-
   // Read the .dat file
-  if (!readDatFile("interpolated_01000_lr.dat")) {
+  if (!readDatFile("electrode_signals.dat")) {
     Serial.println("Failed to read .dat file");
     while (1) { delay(10); }
   }
@@ -124,12 +76,6 @@ void setup() {
 
 void loop() {
   for (int i = 1; i < 160; i++) {
-    // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
-    // uint16_t valueA = (uint16_t)((adjustedData[0][i] + 5.0) / 10.0 * 4095);
-    // uint16_t valueB = (uint16_t)((adjustedData[1][i] + 5.0) / 10.0 * 4095);
-    // uint16_t valueC = (uint16_t)((adjustedData[6][i] + 5.0) / 10.0 * 4095);
-    // uint16_t valueD = (uint16_t)((adjustedData[7][i] + 5.0) / 10.0 * 4095);
-    // uint16_t dacValue = (uint16_t)((adjustedData[2][i] + 5.0) / 10.0 * 4095);
 
     // Convert the adjusted data to a range suitable for DAC (0-4095 for 12-bit DAC)
     uint16_t valueA = (uint16_t)(map(rawData[0][i]-(-710),700,1845,0,4095));
