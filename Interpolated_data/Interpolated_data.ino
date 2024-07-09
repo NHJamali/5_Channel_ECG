@@ -16,7 +16,6 @@ const int numLeads = 5;
 
 // Buffers to store raw and adjusted signal data
 int16_t rawData[numLeads][numSamples];
-float adjustedData[numLeads][numSamples];
 
 // Gain and baseline arrays
 float gain[numLeads];
@@ -70,8 +69,6 @@ void setup() {
     while (1) { delay(10); }
   }
 
-  // Adjust the raw data using gain and baseline
-  adjustData();
 }
 
 void loop() {
